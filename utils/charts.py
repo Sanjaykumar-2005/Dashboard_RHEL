@@ -22,14 +22,21 @@ PALETTE = [GREEN, BLUE, ORANGE, PURPLE, RED, "#00d1b2", "#f368e0", "#feca57"]
 
 def _base_layout(fig: go.Figure, title: str, ylabel: str = "", height: int = 280):
     fig.update_layout(
-        title=dict(text=title, font=dict(size=14, color="#e6e6e6")),
+        # Pin the title to the very top of the figure (container-relative) so it
+        # never overlaps the legend or the plot area.
+        title=dict(text=title, font=dict(size=14, color="#e6e6e6"),
+                   x=0.5, xanchor="center", xref="paper",
+                   y=0.98, yanchor="top", yref="container"),
         paper_bgcolor=PAPER,
         plot_bgcolor=PLOT,
         font=dict(color="#cfd3dc", size=11),
-        margin=dict(l=50, r=20, t=40, b=30),
+        # Extra top margin leaves a clear band for the title + legend row.
+        margin=dict(l=50, r=20, t=64, b=30),
         height=height,
         hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+        # Legend sits just below the title, above the plot area.
+        legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0,
+                    font=dict(size=10)),
     )
     fig.update_xaxes(gridcolor=GRID, zeroline=False, showgrid=True)
     fig.update_yaxes(gridcolor=GRID, zeroline=False, showgrid=True, title=ylabel)

@@ -7,6 +7,7 @@ sampling loop at ~1 s cadence, the deltas are effectively per-second rates.
 from __future__ import annotations
 
 import os
+import platform
 import time
 
 import psutil
@@ -16,6 +17,44 @@ _prev = {
     "disk": None,
     "net": None,
 }
+
+# CPU model is fixed for the host's lifetime — detect once and cache.
+_cpu_model_cache: str | None = None
+
+
+def _cpu_model() -> str:
+    """Best-effort human-readable CPU model name across RHEL + Windows."""
+    global _cpu_model_cache
+    if _cpu_model_cache is not None:
+        return _cpu_model_cache
+
+    name = ""
+    # Linux / RHEL: /proc/cpuinfo "model name" (e.g. Intel(R) Xeon(R) ...).
+    try:
+        with open("/proc/cpuinfo", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                if line.lower().startswith("model name"):
+                    name = line.split(":", 1)[1].strip()
+                    break
+    except OSError:
+        pass
+
+    # Windows: registry holds the friendly "ProcessorNameString".
+    if not name and os.name == "nt":
+        try:
+            import winreg
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") as key:
+                name = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
+        except OSError:
+            pass
+
+    if not name:
+        name = platform.processor() or platform.machine() or "Unknown CPU"
+
+    _cpu_model_cache = name
+    return name
 
 
 def collect_cpu() -> dict:
@@ -32,6 +71,7 @@ def collect_cpu() -> dict:
         cur_freq = 0.0
     return {
         "available": True,
+        "model": _cpu_model(),
         "percent": overall,
         "per_core": per_core,
         "cores": len(per_core),

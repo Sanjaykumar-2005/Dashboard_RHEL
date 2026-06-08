@@ -12,10 +12,10 @@ opts = ui.sidebar(store)
 snap = store.latest()
 window = store.window(opts["range_seconds"])
 
-ui.header("🧮 CPU Analytics", "Xeon processor utilization")
+cpu = snap.get("cpu", {})
+ui.header("🧮 CPU Analytics", f"{cpu.get('model') or 'CPU'} · utilization")
 ui.alert_banner(snap)
 
-cpu = snap.get("cpu", {})
 if not cpu.get("available"):
     st.warning("CPU metrics unavailable.")
     st.stop()
