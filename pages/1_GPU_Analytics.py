@@ -1,4 +1,4 @@
-"""GPU Analytics — per-H200 detail + live utilization/memory/temp/power charts."""
+"""GPU Analytics — per-device detail + live utilization/memory/temp/power charts."""
 from __future__ import annotations
 
 import pandas as pd
@@ -12,7 +12,7 @@ opts = ui.sidebar(store)
 snap = store.latest()
 window = store.window(opts["range_seconds"])
 
-ui.header("🎮 GPU Analytics", "NVIDIA H200 per-device metrics")
+ui.header("🎮 GPU Analytics", "Per-device GPU metrics")
 ui.alert_banner(snap)
 
 gpu = snap.get("gpu", {})
@@ -37,7 +37,7 @@ times = ui.time_axis(window)
 
 for g in shown:
     idx = g.get("index")
-    st.subheader(f"GPU {idx} — {g.get('name', 'NVIDIA H200')}")
+    st.subheader(f"GPU {idx} — {g.get('name', 'GPU')}")
 
     m = st.columns(5)
     m[0].metric("Utilization", pct(g.get("util", 0)))

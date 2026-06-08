@@ -1,5 +1,5 @@
 """
-Central configuration for the H200 monitoring dashboard.
+Central configuration for the server monitoring dashboard.
 
 Everything is overridable via environment variables so the same code runs on a
 dev laptop and on the production RHEL box without edits.  No values are persisted
@@ -15,10 +15,10 @@ def _env(name: str, default: str) -> str:
 
 
 # --- Endpoints -------------------------------------------------------------
-# vLLM exposes a Prometheus text endpoint (default :8000/metrics).
-VLLM_METRICS_URL = _env("VLLM_METRICS_URL", "http://localhost:8000/metrics")
-# Ollama REST API base.
-OLLAMA_URL = _env("OLLAMA_URL", "http://localhost:11434")
+# vLLM exposes a Prometheus text endpoint (default :8009/metrics).
+VLLM_METRICS_URL = _env("VLLM_METRICS_URL", "http://localhost:8009/metrics")
+# LLM serving (Ollama) REST API base (default :8112).
+OLLAMA_URL = _env("OLLAMA_URL", "http://localhost:8112")
 
 # HTTP timeout (seconds) for scraping the LLM endpoints.  Kept short so a dead
 # endpoint never stalls the 1-second sampling loop.
@@ -61,4 +61,22 @@ TIME_RANGES = {
     "Last 15m": 900,
 }
 
-APP_TITLE = "H200 Server Monitor"
+APP_TITLE = "Server Monitor"
+
+# --- Sidebar navigation -----------------------------------------------------
+# All pages grouped under a single "Analytics" dropdown in the sidebar
+# (the native multipage list is disabled in .streamlit/config.toml).
+# (label, script path relative to the app entry point).
+PAGES = [
+    ("Overview", "app.py"),
+    ("GPU Analytics", "pages/1_GPU_Analytics.py"),
+    ("CPU Analytics", "pages/2_CPU_Analytics.py"),
+    ("Memory Analytics", "pages/3_Memory_Analytics.py"),
+    ("Disk Analytics", "pages/4_Disk_Analytics.py"),
+    ("Network Analytics", "pages/5_Network_Analytics.py"),
+    ("vLLM Analytics", "pages/6_vLLM_Analytics.py"),
+    ("Ollama Analytics", "pages/7_Ollama_Analytics.py"),
+    ("LLM Performance", "pages/8_LLM_Performance.py"),
+    ("Request Analytics", "pages/9_Request_Analytics.py"),
+    ("Alerts", "pages/10_Alerts.py"),
+]

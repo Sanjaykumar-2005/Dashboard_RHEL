@@ -20,4 +20,4 @@ gatherUsageStats = false
 
 [client]
 toolbarMode = "minimal"
-showSidebarNavigation = true
+showSidebarNavigation = false   # replaced by the single "Analytics" dropdown in utils/ui.py

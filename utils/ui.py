@@ -47,9 +47,27 @@ def page_setup(title: str, icon: str = "📊"):
                        page_icon=icon, layout="wide",
                        initial_sidebar_state="expanded")
     st.markdown(_CSS, unsafe_allow_html=True)
+    # Remember which page we're on so the sidebar nav dropdown can reflect it.
+    st.session_state["_page"] = title
     # 1-second auto refresh (the spec's core requirement).
     st_autorefresh(interval=config.REFRESH_MS, key=f"refresh_{title}")
     return get_store()
+
+
+def _nav():
+    """Single 'Analytics' dropdown that replaces the native multipage list.
+
+    Each page records its label via :func:`page_setup`; selecting a different
+    one navigates there with ``st.switch_page``.
+    """
+    current = st.session_state.get("_page", config.PAGES[0][0])
+    labels = [p[0] for p in config.PAGES]
+    index = labels.index(current) if current in labels else 0
+    # Key is per-page so the default index always applies cleanly on each page.
+    choice = st.sidebar.selectbox("📂 Analytics", labels, index=index,
+                                  key=f"nav_{current}")
+    if choice != current:
+        st.switch_page(dict(config.PAGES)[choice])
 
 
 def _pill(label: str, on: bool) -> str:
@@ -65,6 +83,10 @@ def sidebar(store) -> dict:
 
     st.sidebar.markdown(f"## ⚡ {config.APP_TITLE}")
     st.sidebar.caption("Live · no data persisted")
+
+    # Single navigation dropdown (replaces the native page list).
+    _nav()
+    st.sidebar.divider()
 
     # Source status pills.
     st.sidebar.markdown(

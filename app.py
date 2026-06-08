@@ -1,5 +1,5 @@
 """
-H200 Server Monitor — Overview Dashboard (multipage entry point).
+Server Monitor — Overview Dashboard (multipage entry point).
 
 Run with:  streamlit run app.py
 All other pages live in ./pages and share the same in-memory store.
