@@ -1,0 +1,23 @@
+# Streamlit configuration — dark theme + server settings
+[theme]
+base = "dark"
+primaryColor = "#76b900"            # NVIDIA green
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#161a23"
+textColor = "#e6e6e6"
+font = "monospace"
+
+[server]
+headless = true
+runOnSave = false
+fileWatcherType = "none"            # we refresh manually every 1s; no file watching needed
+enableXsrfProtection = true
+port = 8501
+address = "0.0.0.0"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+showSidebarNavigation = true

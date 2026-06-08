@@ -1,0 +1,29 @@
+[Unit]
+Description=H200 Server Monitoring Dashboard (Streamlit)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# --- Edit these to match your deployment ---
+User=monitor
+Group=monitor
+WorkingDirectory=/opt/h200-dashboard
+# Endpoints / log path (override defaults from utils/config.py):
+Environment=VLLM_METRICS_URL=http://localhost:8000/metrics
+Environment=OLLAMA_URL=http://localhost:11434
+Environment=REQUEST_LOG_PATH=/var/log/llm/requests.log
+Environment=REFRESH_MS=1000
+Environment=HISTORY_LEN=900
+Environment=PORT=8501
+
+ExecStart=/opt/h200-dashboard/venv/bin/streamlit run /opt/h200-dashboard/app.py \
+  --server.address=0.0.0.0 --server.port=8501 --server.headless=true
+
+Restart=always
+RestartSec=5
+# Streamlit + collectors are lightweight; cap memory defensively.
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

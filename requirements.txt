@@ -1,0 +1,11 @@
+# Real-Time NVIDIA H200 Server Monitoring Dashboard
+# Python 3.10+
+
+streamlit>=1.33.0
+streamlit-autorefresh>=1.0.1
+plotly>=5.20.0
+pandas>=2.0.0
+numpy>=1.24.0
+psutil>=5.9.0
+nvidia-ml-py>=12.535.0   # provides the `pynvml` module
+requests>=2.31.0
