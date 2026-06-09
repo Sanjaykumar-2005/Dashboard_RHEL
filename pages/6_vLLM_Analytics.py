@@ -14,11 +14,16 @@ window = store.window(opts["range_seconds"])
 ui.header("🚀 vLLM Analytics", f"Source: {config.VLLM_METRICS_URL}")
 ui.alert_banner(snap)
 
+# Request volume from the systemd journal — independent of the /metrics endpoint,
+# so it stays live even when the Prometheus scrape below is unavailable.
+ui.request_volume(snap, window, "vllm", "Request Volume (vLLM)")
+st.divider()
+
 v = snap.get("vllm", {})
 if not v.get("available"):
     st.warning(f"vLLM metrics endpoint not reachable at `{config.VLLM_METRICS_URL}`. "
-               "Start vLLM with `--disable-log-stats` *off* so /metrics is served, "
-               "or set VLLM_METRICS_URL.")
+               "Token throughput / latency below need /metrics; the request-volume "
+               "tiles above come from the journal and keep working regardless.")
     st.stop()
 
 m = st.columns(5)

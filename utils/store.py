@@ -15,7 +15,7 @@ import time
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 
-from collectors import gpu, system, vllm, ollama, llm_perf, logs
+from collectors import gpu, system, vllm, ollama, llm_perf, logs, journal
 from utils import config
 
 
@@ -32,7 +32,7 @@ class MetricStore:
         # Collectors are independent and partly I/O-bound (nvidia-smi, HTTP to
         # vLLM/Ollama). Running them concurrently keeps each ~1s snapshot close
         # to the SLOWEST single source instead of their sum.
-        self._pool = ThreadPoolExecutor(max_workers=5, thread_name_prefix="collector")
+        self._pool = ThreadPoolExecutor(max_workers=6, thread_name_prefix="collector")
 
     # --- sampling ---------------------------------------------------------
     def _safe(self, name, fn, default):
@@ -54,6 +54,9 @@ class MetricStore:
         f_oll = self._pool.submit(self._safe, "ollama", ollama.collect, {"available": False})
         f_log = self._pool.submit(self._safe, "logs", logs.collect,
                                   {"available": False, "rows": []})
+        f_req = self._pool.submit(
+            self._safe, "journal", journal.collect,
+            {"vllm": {"available": False}, "ollama": {"available": False}})
 
         snap["gpu"] = f_gpu.result()
         sysm = f_sys.result()
@@ -65,6 +68,7 @@ class MetricStore:
         snap["ollama"] = f_oll.result()
         snap["llm"] = llm_perf.collect(snap["vllm"], snap["ollama"])
         snap["logs"] = f_log.result()
+        snap["requests"] = f_req.result()
         return snap
 
     def _run(self):

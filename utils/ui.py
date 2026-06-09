@@ -139,6 +139,44 @@ def time_axis(window: list[dict]) -> list[datetime]:
     return [datetime.fromtimestamp(s["ts"]) for s in window]
 
 
+def request_volume(snap: dict, window: list[dict], source_key: str,
+                   label: str = "Request Volume"):
+    """Render req/sec · /min · /hour · /day tiles + a trend, from journal counts.
+
+    Always safe to call even when the source's /metrics endpoint is down — the
+    numbers come from the systemd journal (``collectors/journal.py``), not the
+    HTTP endpoint.  ``source_key`` is "vllm" or "ollama".
+    """
+    from utils import charts
+    from utils.format import num_h
+
+    rq = snap.get("requests", {}).get(source_key, {})
+    st.subheader(f"📊 {label}")
+    if rq.get("error"):
+        st.caption(f"⚠ journal unavailable: {rq['error']}")
+    elif not rq.get("available"):
+        st.caption("Waiting for the systemd journal… (set VLLM_UNITS / "
+                   "OLLAMA_UNITS if the unit name differs)")
+    else:
+        st.caption(f"Counted live from journal units: "
+                   f"`{', '.join(rq.get('units', [])) or '—'}`")
+
+    c = st.columns(4)
+    c[0].metric("Requests / sec", f"{rq.get('req_per_sec', 0):.2f}")
+    c[1].metric("Requests / min", num_h(rq.get("req_per_min", 0), 0))
+    c[2].metric("Requests / hour", num_h(rq.get("req_per_hour", 0), 0))
+    c[3].metric("Requests / day", num_h(rq.get("req_per_day", 0), 0))
+
+    if window:
+        series = [s.get("requests", {}).get(source_key, {}).get("req_per_min", 0)
+                  for s in window]
+        st.plotly_chart(
+            charts.line(time_axis(window), {"Req/min": series},
+                        "Requests per minute (trailing-60s count)", "req/min",
+                        fill=True),
+            use_container_width=True)
+
+
 def alert_banner(snap: dict):
     """Render a compact alert strip; returns the active alert list."""
     from utils import alerts as alerts_mod

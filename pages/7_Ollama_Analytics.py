@@ -15,10 +15,15 @@ window = store.window(opts["range_seconds"])
 ui.header("🦙 Ollama Analytics", f"Source: {config.OLLAMA_URL}")
 ui.alert_banner(snap)
 
+# Request volume from the systemd journal — independent of the /api endpoint.
+ui.request_volume(snap, window, "ollama", "Request Volume (Ollama)")
+st.divider()
+
 o = snap.get("ollama", {})
 if not o.get("available"):
     st.warning(f"Ollama API not reachable at `{config.OLLAMA_URL}`. "
-               "Is `ollama serve` running? Set OLLAMA_URL if it lives elsewhere.")
+               "Running-model details below need the API; the request-volume tiles "
+               "above come from the journal and keep working regardless.")
     st.stop()
 
 m = st.columns(4)

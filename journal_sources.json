@@ -1,0 +1,13 @@
+{
+  "_comment": "Which systemd units the dashboard counts requests from (journal-based req/sec/min/hour/day). Edit the 'units' lists to add/remove instances - no code change needed. 'request_pattern' is the journalctl --grep regex that matches exactly ONE log line per served request. Env vars VLLM_UNITS / OLLAMA_UNITS / VLLM_REQUEST_PATTERN / OLLAMA_REQUEST_PATTERN still override this file if set.",
+
+  "vllm": {
+    "units": ["chandra-api"],
+    "request_pattern": "POST /v1/(chat/completions|completions|embeddings)"
+  },
+
+  "ollama": {
+    "units": ["ollama"],
+    "request_pattern": "POST .*/api/(generate|chat|embeddings|embed)"
+  }
+}

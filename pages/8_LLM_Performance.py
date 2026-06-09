@@ -19,6 +19,31 @@ window = store.window(opts["range_seconds"])
 ui.header("📈 LLM Performance Dashboard", "End-to-end serving KPIs (vLLM + Ollama)")
 ui.alert_banner(snap)
 
+# Combined request volume (vLLM + Ollama) from the systemd journal — works even
+# when the /metrics and /api endpoints are down.
+reqs = snap.get("requests", {})
+rv, ro = reqs.get("vllm", {}), reqs.get("ollama", {})
+c_min = rv.get("req_per_min", 0) + ro.get("req_per_min", 0)
+c_hour = rv.get("req_per_hour", 0) + ro.get("req_per_hour", 0)
+c_day = rv.get("req_per_day", 0) + ro.get("req_per_day", 0)
+st.subheader("📊 Request Volume (vLLM + Ollama, from journal)")
+rc = st.columns(4)
+rc[0].metric("Requests / sec", f"{round(c_min / 60.0, 2):.2f}")
+rc[1].metric("Requests / min", num_h(c_min, 0))
+rc[2].metric("Requests / hour", num_h(c_hour, 0))
+rc[3].metric("Requests / day", num_h(c_day, 0))
+combined_series = [
+    s.get("requests", {}).get("vllm", {}).get("req_per_min", 0)
+    + s.get("requests", {}).get("ollama", {}).get("req_per_min", 0)
+    for s in window
+]
+if window:
+    st.plotly_chart(charts.line(
+        ui.time_axis(window), {"Req/min": combined_series},
+        "Requests per minute (vLLM + Ollama)", "req/min", fill=True),
+        use_container_width=True)
+st.divider()
+
 llm = snap.get("llm", {})
 
 # Latency tail from the history window.
