@@ -148,7 +148,6 @@ def request_volume(snap: dict, window: list[dict], source_key: str,
     HTTP endpoint.  ``source_key`` is "vllm" or "ollama".
     """
     from utils import charts
-    from utils.format import num_h
 
     rq = snap.get("requests", {}).get(source_key, {})
     st.subheader(f"📊 {label}")
@@ -163,9 +162,9 @@ def request_volume(snap: dict, window: list[dict], source_key: str,
 
     c = st.columns(4)
     c[0].metric("Requests / sec", f"{rq.get('req_per_sec', 0):.2f}")
-    c[1].metric("Requests / min", num_h(rq.get("req_per_min", 0), 0))
-    c[2].metric("Requests / hour", num_h(rq.get("req_per_hour", 0), 0))
-    c[3].metric("Requests / day", num_h(rq.get("req_per_day", 0), 0))
+    c[1].metric("Requests / min", f"{int(rq.get('req_per_min', 0)):,}")
+    c[2].metric("Requests / hour", f"{int(rq.get('req_per_hour', 0)):,}")
+    c[3].metric("Requests / day", f"{int(rq.get('req_per_day', 0)):,}")
 
     if window:
         series = [s.get("requests", {}).get(source_key, {}).get("req_per_min", 0)
