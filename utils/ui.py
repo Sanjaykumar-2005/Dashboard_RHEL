@@ -164,7 +164,8 @@ def request_volume(snap: dict, window: list[dict], source_key: str,
     c[0].metric("Requests / sec", f"{rq.get('req_per_sec', 0):.2f}")
     c[1].metric("Requests / min", f"{int(rq.get('req_per_min', 0)):,}")
     c[2].metric("Requests / hour", f"{int(rq.get('req_per_hour', 0)):,}")
-    c[3].metric("Requests / day", f"{int(rq.get('req_per_day', 0)):,}")
+    c[3].metric("Requests today", f"{int(rq.get('req_per_day', 0)):,}",
+                help="Total since local midnight (12 AM); resets daily.")
 
     if window:
         series = [s.get("requests", {}).get(source_key, {}).get("req_per_min", 0)

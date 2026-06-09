@@ -31,7 +31,8 @@ rc = st.columns(4)
 rc[0].metric("Requests / sec", f"{round(c_min / 60.0, 2):.2f}")
 rc[1].metric("Requests / min", f"{int(c_min):,}")
 rc[2].metric("Requests / hour", f"{int(c_hour):,}")
-rc[3].metric("Requests / day", f"{int(c_day):,}")
+rc[3].metric("Requests today", f"{int(c_day):,}",
+             help="Total since local midnight (12 AM); resets daily.")
 combined_series = [
     s.get("requests", {}).get("vllm", {}).get("req_per_min", 0)
     + s.get("requests", {}).get("ollama", {}).get("req_per_min", 0)

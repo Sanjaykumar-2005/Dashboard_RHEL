@@ -131,6 +131,13 @@ class _Source:
         def since(window: int) -> int:
             return len(self._events) - bisect.bisect_left(self._events, now - window)
 
+        # Calendar-day total: count from local midnight (12 AM) so the number
+        # only climbs through the day and resets to 0 at the next midnight,
+        # instead of a rolling 24h window that "reduces" during quiet stretches.
+        lt = time.localtime(now)
+        midnight = now - (lt.tm_hour * 3600 + lt.tm_min * 60 + lt.tm_sec)
+        req_today = len(self._events) - bisect.bisect_left(self._events, midnight)
+
         per_min = since(60)
         return {
             "available": available,
@@ -140,7 +147,7 @@ class _Source:
             "req_per_sec": round(per_min / 60.0, 2),
             "req_per_min": per_min,
             "req_per_hour": since(3600),
-            "req_per_day": len(self._events),   # rolling 24h
+            "req_per_day": req_today,   # since local midnight (resets at 12 AM)
             "total_seen": self._total,
         }
 
