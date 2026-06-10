@@ -57,3 +57,6 @@ with b:
         times, {"VRAM": [s["ollama"].get("vram_used", 0) for s in window]},
         "VRAM Usage (bytes)", "bytes", fill=True),
         use_container_width=True)
+
+st.divider()
+ui.service_logs(config.OLLAMA_UNITS, "Ollama service logs")

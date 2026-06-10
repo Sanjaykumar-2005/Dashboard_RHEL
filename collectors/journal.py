@@ -157,6 +157,35 @@ _vllm = _Source(config.VLLM_UNITS, config.VLLM_REQUEST_PATTERN)
 _ollama = _Source(config.OLLAMA_UNITS, config.OLLAMA_REQUEST_PATTERN)
 
 
+def tail(units: list[str], lines: int = 60) -> dict:
+    """Return the last ``lines`` raw journal lines for the given units.
+
+    Used to render live service logs under each page's charts.  Unlike
+    :meth:`_Source.sample`, this is unfiltered (no ``--grep``) so it shows the
+    full service output, not just request lines.
+    """
+    if not config.JOURNAL_ENABLED or not _HAVE_JOURNALCTL:
+        return {"available": False, "lines": [],
+                "error": "journalctl unavailable on this host"}
+    cmd = ["journalctl", "--no-pager", "-q", "-n", str(lines)]
+    for u in units:
+        cmd += ["-u", u]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
+    except FileNotFoundError:
+        return {"available": False, "lines": [],
+                "error": "journalctl not found (not a systemd host)"}
+    except Exception as exc:  # timeout etc.
+        return {"available": False, "lines": [], "error": repr(exc)}
+
+    err = (proc.stderr or "").strip()
+    if err and ("permission" in err.lower() or "failed" in err.lower()):
+        return {"available": False, "lines": [], "error": err.splitlines()[0]}
+
+    out = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+    return {"available": True, "lines": out, "error": None}
+
+
 def _empty(units: list[str]) -> dict:
     return {
         "available": False, "units": units, "error": None,

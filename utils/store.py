@@ -15,7 +15,7 @@ import time
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 
-from collectors import gpu, system, vllm, ollama, llm_perf, logs, journal
+from collectors import gpu, system, vllm, ollama, llm_perf, journal
 from utils import config
 
 
@@ -52,8 +52,6 @@ class MetricStore:
         f_sys = self._pool.submit(self._safe, "system", system.collect, {})
         f_vllm = self._pool.submit(self._safe, "vllm", vllm.collect, {"available": False})
         f_oll = self._pool.submit(self._safe, "ollama", ollama.collect, {"available": False})
-        f_log = self._pool.submit(self._safe, "logs", logs.collect,
-                                  {"available": False, "rows": []})
         f_req = self._pool.submit(
             self._safe, "journal", journal.collect,
             {"vllm": {"available": False}, "ollama": {"available": False}})
@@ -67,7 +65,6 @@ class MetricStore:
         snap["vllm"] = f_vllm.result()
         snap["ollama"] = f_oll.result()
         snap["llm"] = llm_perf.collect(snap["vllm"], snap["ollama"])
-        snap["logs"] = f_log.result()
         snap["requests"] = f_req.result()
         return snap
 

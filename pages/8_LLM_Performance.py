@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import streamlit as st
 
-from utils import ui, charts
+from utils import ui, charts, config
 from utils.format import num_h, secs
 
 store = ui.page_setup("LLM Performance", "📈")
@@ -104,3 +104,10 @@ with b:
 if not llm.get("available"):
     st.info("No LLM backend reporting yet — start vLLM and/or Ollama to populate "
             "these KPIs.")
+
+st.divider()
+log_v, log_o = st.columns(2)
+with log_v:
+    ui.service_logs(config.VLLM_UNITS, "vLLM service logs")
+with log_o:
+    ui.service_logs(config.OLLAMA_UNITS, "Ollama service logs")

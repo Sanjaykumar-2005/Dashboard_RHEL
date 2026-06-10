@@ -73,3 +73,6 @@ with b:
         times, {"GPU Cache %": [s["vllm"].get("gpu_cache_usage", 0) for s in window]},
         "KV-Cache Usage", "%", fill=True, ymax=100),
         use_container_width=True)
+
+st.divider()
+ui.service_logs(config.VLLM_UNITS, "vLLM service logs")

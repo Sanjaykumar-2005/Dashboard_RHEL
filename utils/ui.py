@@ -94,8 +94,7 @@ def sidebar(store) -> dict:
         _pill("vLLM", snap.get("vllm", {}).get("available", False)),
         unsafe_allow_html=True)
     st.sidebar.markdown(
-        _pill("Ollama", snap.get("ollama", {}).get("available", False)) + " " +
-        _pill("Logs", snap.get("logs", {}).get("available", False)),
+        _pill("Ollama", snap.get("ollama", {}).get("available", False)),
         unsafe_allow_html=True)
     st.sidebar.divider()
 
@@ -175,6 +174,33 @@ def request_volume(snap: dict, window: list[dict], source_key: str,
                         "Requests per minute (trailing-60s count)", "req/min",
                         fill=True),
             use_container_width=True)
+
+
+@st.cache_data(ttl=3, show_spinner=False)
+def _tail_journal(units_key: tuple, lines: int) -> dict:
+    """Cached journalctl tail (ttl 3 s) so the 1 s refresh doesn't spam it."""
+    from collectors import journal
+    return journal.tail(list(units_key), lines)
+
+
+def service_logs(units: list[str], label: str = "Service logs",
+                 lines: int = 60):
+    """Render the last ``lines`` systemd-journal lines for ``units``.
+
+    Reuses the same unit names the request counters use (from
+    ``journal_sources.json`` / env), so no service name is hardcoded here.
+    """
+    st.subheader(f"📝 {label}")
+    if not units:
+        st.caption("No units configured.")
+        return
+    res = _tail_journal(tuple(units), lines)
+    st.caption(f"`journalctl -u {' -u '.join(units)} -n {lines}`")
+    if not res.get("available"):
+        st.caption(f"⚠ logs unavailable: {res.get('error') or '—'}")
+        return
+    body = "\n".join(res.get("lines", [])) or "(no recent log lines)"
+    st.code(body, language="log")
 
 
 def alert_banner(snap: dict):

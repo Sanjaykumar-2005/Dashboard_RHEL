@@ -26,8 +26,8 @@ OLLAMA_URL = _env("OLLAMA_URL", "http://localhost:8112")
 HTTP_TIMEOUT = float(_env("HTTP_TIMEOUT", "0.8"))
 
 # --- Request log ------------------------------------------------------------
-# Path to the application request log that the Request Analytics page tails.
-# Each line should be JSON, e.g.:
+# Legacy JSON-lines request log path (the Request Analytics page that tailed it
+# was removed; kept only for tools/simulate_requests.py).  Each line is JSON, e.g.:
 #   {"ts": "...", "user": "...", "model": "...", "input_tokens": 1,
 #    "output_tokens": 1, "latency": 0.1, "status": "ok"}
 # Plain text lines are still shown (raw) if they are not JSON.
@@ -89,6 +89,16 @@ OLLAMA_UNITS = _units("OLLAMA_UNITS", "ollama", ["ollama"])
 OLLAMA_REQUEST_PATTERN = _pattern(
     "OLLAMA_REQUEST_PATTERN", "ollama", r"POST .*/api/(generate|chat|embeddings|embed)")
 
+# --- Disk folder scan (directories over a size threshold) -------------------
+# The Disk page lists folders larger than DISK_SCAN_THRESHOLD_GB.  This walks the
+# filesystem (``du``), which is slow, so it runs on-demand behind a cache + a
+# manual "Rescan" button — never in the 1-second sampling loop.
+DISK_SCAN_ROOT = _env("DISK_SCAN_ROOT", "C:\\" if os.name == "nt" else "/")
+DISK_SCAN_THRESHOLD_GB = float(_env("DISK_SCAN_THRESHOLD_GB", "10"))
+DISK_SCAN_THRESHOLD_BYTES = int(DISK_SCAN_THRESHOLD_GB * (1024 ** 3))
+# How many directory levels below the root to report (1 = immediate children).
+DISK_SCAN_DEPTH = int(_env("DISK_SCAN_DEPTH", "1"))
+
 # --- Sampling / history -----------------------------------------------------
 # The background collector samples every SAMPLE_INTERVAL seconds; the UI also
 # auto-refreshes at REFRESH_MS.  Both default to ~1 second per the spec.
@@ -134,6 +144,5 @@ PAGES = [
     ("vLLM Analytics", "pages/6_vLLM_Analytics.py"),
     ("Ollama Analytics", "pages/7_Ollama_Analytics.py"),
     ("LLM Performance", "pages/8_LLM_Performance.py"),
-    ("Request Analytics", "pages/9_Request_Analytics.py"),
     ("Alerts", "pages/10_Alerts.py"),
 ]
