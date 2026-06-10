@@ -76,6 +76,20 @@ def _pill(label: str, on: bool) -> str:
     return f'<span class="{cls}">{label}: {state}</span>'
 
 
+def _llm_online(snap: dict, key: str) -> bool:
+    """Whether a serving source (vLLM/Ollama) is up.
+
+    This deployment has no HTTP ``/metrics`` route, so the scrape-based
+    ``available`` flag is always False.  We treat the source as online when the
+    systemd-journal extraction it actually relies on is working
+    (``snap["requests"][key]["available"]``), falling back to the HTTP flag for
+    hosts that *do* expose the endpoint.
+    """
+    if snap.get(key, {}).get("available"):
+        return True
+    return bool(snap.get("requests", {}).get(key, {}).get("available"))
+
+
 def sidebar(store) -> dict:
     snap = store.latest()
     gpu = snap.get("gpu", {})
@@ -91,10 +105,10 @@ def sidebar(store) -> dict:
     # Source status pills.
     st.sidebar.markdown(
         _pill("GPU", gpu.get("available", False)) + " " +
-        _pill("vLLM", snap.get("vllm", {}).get("available", False)),
+        _pill("vLLM", _llm_online(snap, "vllm")),
         unsafe_allow_html=True)
     st.sidebar.markdown(
-        _pill("Ollama", snap.get("ollama", {}).get("available", False)),
+        _pill("Ollama", _llm_online(snap, "ollama")),
         unsafe_allow_html=True)
     st.sidebar.divider()
 
