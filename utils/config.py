@@ -96,8 +96,10 @@ OLLAMA_REQUEST_PATTERN = _pattern(
 DISK_SCAN_ROOT = _env("DISK_SCAN_ROOT", "C:\\" if os.name == "nt" else "/")
 DISK_SCAN_THRESHOLD_GB = float(_env("DISK_SCAN_THRESHOLD_GB", "10"))
 DISK_SCAN_THRESHOLD_BYTES = int(DISK_SCAN_THRESHOLD_GB * (1024 ** 3))
-# How many directory levels below the root to report (1 = immediate children).
-DISK_SCAN_DEPTH = int(_env("DISK_SCAN_DEPTH", "1"))
+# How many directory levels below the root to report (1 = immediate children,
+# 3 = up to three levels deep).  Deeper scans surface nested large folders but
+# take longer and return more rows.
+DISK_SCAN_DEPTH = int(_env("DISK_SCAN_DEPTH", "3"))
 
 # --- Sampling / history -----------------------------------------------------
 # The background collector samples every SAMPLE_INTERVAL seconds; the UI also

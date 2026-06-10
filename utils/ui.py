@@ -5,6 +5,7 @@ GPU + time-range selection, then renders using the returned store/window.
 """
 from __future__ import annotations
 
+import html
 from datetime import datetime
 
 import streamlit as st
@@ -16,6 +17,10 @@ from utils.store import get_store
 _CSS = """
 <style>
   .stApp { background-color: #0e1117; }
+  /* Trim Streamlit's large default top padding on every page. */
+  .block-container { padding-top: 1.5rem !important; }
+  header[data-testid="stHeader"] { height: 0; background: transparent; }
+  div[data-testid="stToolbar"] { right: 0.5rem; }
   section[data-testid="stSidebar"] { background-color: #11151d; }
   div[data-testid="stMetric"] {
       background: #161a23; border: 1px solid #232838; border-radius: 10px;
@@ -37,6 +42,14 @@ _CSS = """
           font-size:0.75rem; font-weight:600; }
   .pill-on  { background:#16331a; color:#76b900; border:1px solid #2f6b1f; }
   .pill-off { background:#2a2230; color:#9aa0ad; border:1px solid #3a3340; }
+  /* Compact, scrollable, drag-to-resize log box (grab the bottom-right corner). */
+  pre.logbox {
+      background:#0b0e14; border:1px solid #232838; border-radius:8px;
+      padding:10px 12px; margin:0;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size:0.78rem; line-height:1.35; color:#c8ccd6;
+      white-space:pre; overflow:auto; resize:vertical; min-height:80px;
+  }
 </style>
 """
 
@@ -198,10 +211,12 @@ def _tail_journal(units_key: tuple, lines: int) -> dict:
 
 
 def service_logs(units: list[str], label: str = "Service logs",
-                 lines: int = 60):
+                 lines: int = 60, height: int = 260):
     """Render the last ``lines`` systemd-journal lines for ``units``.
 
-    Reuses the same unit names the request counters use (from
+    Shown in a fixed-height, scrollable box that the user can drag-resize by the
+    bottom-right corner (CSS ``resize: vertical``), so logs never take over the
+    whole page.  Reuses the same unit names the request counters use (from
     ``journal_sources.json`` / env), so no service name is hardcoded here.
     """
     st.subheader(f"📝 {label}")
@@ -214,7 +229,11 @@ def service_logs(units: list[str], label: str = "Service logs",
         st.caption(f"⚠ logs unavailable: {res.get('error') or '—'}")
         return
     body = "\n".join(res.get("lines", [])) or "(no recent log lines)"
-    st.code(body, language="log")
+    # A <pre> is a CommonMark "type-1" HTML block, so blank lines inside the log
+    # don't terminate it; escape the content so log text can't inject markup.
+    st.markdown(
+        f'<pre class="logbox" style="height:{height}px">{html.escape(body)}</pre>',
+        unsafe_allow_html=True)
 
 
 def alert_banner(snap: dict):
