@@ -42,13 +42,19 @@ _CSS = """
           font-size:0.75rem; font-weight:600; }
   .pill-on  { background:#16331a; color:#76b900; border:1px solid #2f6b1f; }
   .pill-off { background:#2a2230; color:#9aa0ad; border:1px solid #3a3340; }
-  /* Compact, scrollable, drag-to-resize log box (grab the bottom-right corner). */
-  pre.logbox {
+  /* Scrollable, drag-to-resize log container (grab the bottom-right corner). */
+  div.logwrap {
       background:#0b0e14; border:1px solid #232838; border-radius:8px;
-      padding:10px 12px; margin:0;
+      padding:8px; margin:0; overflow-y:auto; resize:vertical; min-height:80px;
+      display:flex; flex-direction:column; gap:6px;
+  }
+  /* Each request / log entry sits in its own card. */
+  div.logline {
+      background:#11151d; border:1px solid #232838; border-left:3px solid #2f6b1f;
+      border-radius:6px; padding:6px 10px;
       font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
       font-size:0.78rem; line-height:1.35; color:#c8ccd6;
-      white-space:pre; overflow:auto; resize:vertical; min-height:80px;
+      white-space:pre-wrap; word-break:break-word;
   }
 </style>
 """
@@ -228,11 +234,17 @@ def service_logs(units: list[str], label: str = "Service logs",
     if not res.get("available"):
         st.caption(f"⚠ logs unavailable: {res.get('error') or '—'}")
         return
-    body = "\n".join(res.get("lines", [])) or "(no recent log lines)"
-    # A <pre> is a CommonMark "type-1" HTML block, so blank lines inside the log
-    # don't terminate it; escape the content so log text can't inject markup.
+    lines = res.get("lines", [])
+    # Each log line / request gets its own card inside one scrollable container.
+    # Build a single HTML block with no blank lines (so CommonMark keeps it whole)
+    # and escape every line so log text can't inject markup.
+    if lines:
+        inner = "".join(
+            f'<div class="logline">{html.escape(ln)}</div>' for ln in lines)
+    else:
+        inner = '<div class="logline">(no recent log lines)</div>'
     st.markdown(
-        f'<pre class="logbox" style="height:{height}px">{html.escape(body)}</pre>',
+        f'<div class="logwrap" style="height:{height}px">{inner}</div>',
         unsafe_allow_html=True)
 
 
