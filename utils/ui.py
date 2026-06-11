@@ -21,7 +21,13 @@ _CSS = """
   .block-container { padding-top: 1.5rem !important; }
   header[data-testid="stHeader"] { height: 0; background: transparent; }
   div[data-testid="stToolbar"] { right: 0.5rem; }
-  section[data-testid="stSidebar"] { background-color: #11151d; }
+  /* Sidebar background — broad selector + !important so it survives Streamlit
+     version differences in the sidebar's data-testid / tag / default theming
+     (otherwise the sidebar reverts to the page colour and "merges in"). */
+  section[data-testid="stSidebar"],
+  div[data-testid="stSidebar"],
+  [data-testid="stSidebar"] > div:first-child,
+  [data-testid="stSidebarContent"] { background-color: #11151d !important; }
   div[data-testid="stMetric"] {
       background: #161a23; border: 1px solid #232838; border-radius: 10px;
       padding: 12px 14px;

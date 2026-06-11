@@ -7,6 +7,13 @@ secondaryBackgroundColor = "#161a23"
 textColor = "#e6e6e6"
 font = "monospace"
 
+# Sidebar styling via the theme (Streamlit >= 1.45 honours this; older versions
+# ignore the unknown keys harmlessly).  Belt-and-suspenders with the CSS in
+# utils/ui.py so the sidebar stays distinct from the page background regardless
+# of the installed Streamlit version's internal DOM.
+[theme.sidebar]
+backgroundColor = "#11151d"
+
 [server]
 headless = true
 runOnSave = false
